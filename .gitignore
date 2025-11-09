@@ -1,0 +1,31 @@
+# Build artifacts
+/build/
+/bin/
+x64/
+SodookuGame/x64/
+*.exe
+*.obj
+*.o
+*.pdb
+*.ilk
+*.tlog
+*.recipe
+*.log
+
+# CMake temporary files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.code-workspace
+
+# Mac / Linux
+.DS_Store
