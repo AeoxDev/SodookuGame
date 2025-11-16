@@ -67,19 +67,16 @@ SudokuBoard::~SudokuBoard()
 			delete cellTexts[row][col];
 		}
 	}
-
-	//delete completionSound;
-	//delete victorySound;
 }
 
-void SudokuBoard::loadPuzzle(const std::vector<std::vector<int>>& puzzle, const std::vector<std::vector<int>>& solvedPuzzle)
+void SudokuBoard::loadPuzzle(const PuzzleData& data)
 {
 	for (int row = 0; row < 9; ++row)
 	{
 		for (int col = 0; col < 9; ++col)
 		{
-			grid[row][col] = puzzle[row][col];
-			solution[row][col] = solvedPuzzle[row][col];
+			grid[row][col] = data.puzzle[row][col];
+			solution[row][col] = data.solution[row][col];
 			solved[row][col] = (grid[row][col] != 0 && grid[row][col] == (int)solution[row][col]);
 
 			cellTexts[row][col]->setString(grid[row][col] == 0 ? "" : std::to_string(grid[row][col]));

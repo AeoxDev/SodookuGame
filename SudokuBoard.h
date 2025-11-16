@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <optional>
+#include "SudokuGame.h"
 
 class SudokuBoard
 {
@@ -30,5 +31,5 @@ public:
 	int getCell(int row, int col) const;
 	bool isValidMove(int row, int col, int value) const;
 	void checkRowComplete();
-	void loadPuzzle(const std::vector<std::vector<int>>& puzzle, const std::vector<std::vector<int>>& solvedPuzzle);
+	void loadPuzzle(const PuzzleData& data);
 };

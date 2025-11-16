@@ -7,15 +7,25 @@
 #include <utility>
 #include <random>
 
-#include "SudokuBoard.h"
+class SudokuBoard;
+
+using Grid = std::array<std::array<int, 9>, 9>;
+struct PuzzleData
+{
+	Grid puzzle;
+	Grid solution;
+};
 
 class SudokuGame
 {
 private:
 	sf::Font font;
-	std::optional<SudokuBoard> leftBoard;
-	std::optional<SudokuBoard> rightBoard;
-	std::vector<std::pair<std::vector<std::vector<int>>, std::vector<std::vector<int>>>> puzzles;
+	//std::optional<SudokuBoard> leftBoard;
+	//std::optional<SudokuBoard> rightBoard;
+	std::unique_ptr<SudokuBoard> leftBoard;
+	std::unique_ptr<SudokuBoard> rightBoard;
+	std::vector<PuzzleData> puzzles;
+	
 public:
 	SudokuGame();
 	~SudokuGame();

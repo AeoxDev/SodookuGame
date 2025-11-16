@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <iostream>
+#include "SudokuBoard.h"
 
 SudokuGame::SudokuGame()
 {
@@ -10,24 +11,25 @@ SudokuGame::SudokuGame()
 	{
 		std::cerr << "Failed to load font." << std::endl;
 	}
-
-	leftBoard.emplace(95.f, 260.f, 400.f, font);
-    rightBoard.emplace(1100.f, 265.f, 400.f, font);
+	leftBoard = std::make_unique<SudokuBoard>(95.f, 260.f, 400.f, font);
+	rightBoard = std::make_unique<SudokuBoard>(1100.f, 265.f, 400.f, font);
+	//leftBoard.emplace(95.f, 260.f, 400.f, font);
+    //rightBoard.emplace(1100.f, 265.f, 400.f, font);
 
 	loadPuzzles();
+    std::cout << "Flag1" << std::endl;
 	startNewGame();
 }
 
 SudokuGame::~SudokuGame()
 {
-
 }
 
 void SudokuGame::run()
 {
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({ 1600u, 900u }), "Sudooku Game");
-
+    std::cout << "Flag" << std::endl;
     // Load Textures
     sf::Texture background;
     if (!background.loadFromFile("Images/background3.png"))
@@ -116,45 +118,64 @@ void SudokuGame::loadPuzzles()
     // For simplicity, we hardcode some puzzles here.
     // In a real application, you might want to load these from a file.
     puzzles = {
-        {
-            {
-                {5,3,0,0,7,0,0,0,0},
-                {6,0,0,1,9,5,0,0,0},
-                {0,9,8,0,0,0,0,6,0},
-                {8,0,0,0,6,0,0,0,3},
-                {4,0,0,8,0,3,0,0,1},
-                {7,0,0,0,2,0,0,0,6},
-                {0,6,0,0,0,0,2,8,0},
-                {0,0,0,4,1,9,0,0,5},
-                {0,0,0,0,8,0,0,7,9}
-            },
-            {
-                {0,5,0,0,7,0,0,0,2},
-                {0,0,0,1,9,5,0,0,0},
-                {0,9,8,0,0,0,6,0,0},
-                {8,0,0,0,6,0,0,0,3},
-                {4,0,0,8,0,3,0,0,1},
-                {7,0,0,0,2,0,0,0,6},
-                {0,6,0,0,0,0,2,8,0},
-                {0,0,0,4,1,9,0,0,0},
-                {2,0,0,0,8,0,0,7,0}
-            }
+        PuzzleData{
+        // Starting Puzzle
+        {{
+            {5,3,0,0,7,0,0,0,0},
+            {6,0,0,1,9,5,0,0,0},
+            {0,9,8,0,0,0,0,6,0},
+            {8,0,0,0,6,0,0,0,3},
+            {4,0,0,8,0,3,0,0,1},
+            {7,0,0,0,2,0,0,0,6},
+            {0,6,0,0,0,0,2,8,0},
+            {0,0,0,4,1,9,0,0,5},
+            {0,0,0,0,8,0,0,7,9}
+        }},
+
+        // Puzzle Solution
+        {{
+            {5,3,4,6,7,8,9,1,2},
+            {6,7,2,1,9,5,3,4,8},
+            {1,9,8,3,4,2,5,6,7},
+            {8,5,9,7,6,1,4,2,3},
+            {4,2,6,8,5,3,7,9,1},
+            {7,1,3,9,2,4,8,5,6},
+            {9,6,1,5,3,7,2,8,4},
+            {2,8,7,4,1,9,6,3,5},
+            {3,4,5,2,8,6,1,7,9}
+        }}
         },
+        
         // Add more puzzles as needed
     };
 }
 
 void SudokuGame::startNewGame()
 {
+    // If no puzzles are loaded, return
     if (puzzles.empty())
         return;
-    // Randomly select a puzzle
+
+    // Generate a random seed based on current elapsed seconds since 1970
     static std::mt19937 rng(static_cast<unsigned int>(std::time(nullptr)));
+
+    // Set the uniformly distributed random indices
     std::uniform_int_distribution<std::size_t> dist(0, puzzles.size() - 1);
+
+    // Generate random indices for both boards
     std::size_t leftIndex = dist(rng);
     std::size_t rightIndex = dist(rng);
-    leftBoard->loadPuzzle(puzzles[leftIndex].first, puzzles[leftIndex].second);
-    rightBoard->loadPuzzle(puzzles[rightIndex].first, puzzles[rightIndex].second);
+
+    // Reroll until rightindex is different from left
+    while (rightIndex == leftIndex)
+    {
+        rightIndex = dist(rng);
+    }
+
+    leftBoard->loadPuzzle(puzzles[leftIndex]);
+    rightBoard->loadPuzzle(puzzles[rightIndex]);
+
+    std::cout << "Flag3" << std::endl;
 }
 
 void SudokuGame::draw(sf::RenderWindow& window)
