@@ -9,7 +9,14 @@ class SudokuBoard
 private:
 	int grid[9][9]{};
 	bool solved[9][9]{};
-	bool solution[9][9]{};
+	int solution[9][9]{};
+
+	// --- Solved trackers ---
+	bool rowWasSolved[9]{false};
+	bool colWasSolved[9]{false};
+	bool blockWasSolved[9]{false};
+	bool boardWasSolved = false;
+	
 	sf::RectangleShape cellShapes[9][9];
 	sf::Text* cellTexts[9][9];
 	sf::Vector2i selectedCell{-1, -1};

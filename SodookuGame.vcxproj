@@ -137,12 +137,19 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="Assets\Puzzles\Puzzles.json" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="External\nlohmann\json.hpp" />
     <ClInclude Include="SudokuBoard.h" />
     <ClInclude Include="SudokuGame.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

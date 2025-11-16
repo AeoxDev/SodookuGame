@@ -3,7 +3,9 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <iostream>
+#include <fstream>
 #include "SudokuBoard.h"
+#include "External/nlohmann/json.hpp"
 
 SudokuGame::SudokuGame()
 {
@@ -17,7 +19,6 @@ SudokuGame::SudokuGame()
     //rightBoard.emplace(1100.f, 265.f, 400.f, font);
 
 	loadPuzzles();
-    std::cout << "Flag1" << std::endl;
 	startNewGame();
 }
 
@@ -29,7 +30,7 @@ void SudokuGame::run()
 {
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({ 1600u, 900u }), "Sudooku Game");
-    std::cout << "Flag" << std::endl;
+
     // Load Textures
     sf::Texture background;
     if (!background.loadFromFile("Images/background3.png"))
@@ -115,45 +116,70 @@ bool SudokuGame::loadFont(const std::string& fontPath)
 
 void SudokuGame::loadPuzzles()
 {
-    // For simplicity, we hardcode some puzzles here.
-    // In a real application, you might want to load these from a file.
-    puzzles = {
-        PuzzleData{
-        // Starting Puzzle
-        {{
-            {5,3,0,0,7,0,0,0,0},
-            {6,0,0,1,9,5,0,0,0},
-            {0,9,8,0,0,0,0,6,0},
-            {8,0,0,0,6,0,0,0,3},
-            {4,0,0,8,0,3,0,0,1},
-            {7,0,0,0,2,0,0,0,6},
-            {0,6,0,0,0,0,2,8,0},
-            {0,0,0,4,1,9,0,0,5},
-            {0,0,0,0,8,0,0,7,9}
-        }},
+    puzzles.clear();
 
-        // Puzzle Solution
-        {{
-            {5,3,4,6,7,8,9,1,2},
-            {6,7,2,1,9,5,3,4,8},
-            {1,9,8,3,4,2,5,6,7},
-            {8,5,9,7,6,1,4,2,3},
-            {4,2,6,8,5,3,7,9,1},
-            {7,1,3,9,2,4,8,5,6},
-            {9,6,1,5,3,7,2,8,4},
-            {2,8,7,4,1,9,6,3,5},
-            {3,4,5,2,8,6,1,7,9}
-        }}
-        },
-        
-        // Add more puzzles as needed
-    };
+    std::ifstream fileReader("Assets/Puzzles/Puzzles.json");
+    if (!fileReader.is_open())
+    {
+        std::cerr << "Failed to open Puzzles.json" << std::endl;
+        return;
+    }
+
+    nlohmann::json j;
+
+    try {
+        fileReader >> j;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "JSON parse error: " << e.what() << std::endl;
+        return;
+    }
+
+    for (const auto& item : j)
+    {
+        PuzzleData data;
+
+        for (int row = 0; row < 9; ++row)
+        {
+            for (int col = 0; col < 9; ++col)
+            {
+                data.puzzle[row][col] = item["puzzle"][row][col].get<int>();
+            }
+        }
+
+        for (int row = 0; row < 9; ++row)
+        {
+            for (int col = 0; col < 9; ++col)
+            {
+                data.solution[row][col] = item["solution"][row][col].get<int>();
+            }
+        }
+
+        puzzles.push_back(data);
+    }
+
+    std::cout << "Loaded " << puzzles.size() << " puzzles." << std::endl;
+/*  DEBUG Solution printing
+    for (int i = 0; i < puzzles.size(); ++i)
+    {
+        std::cout << "--- Puzzle " << i + 1 << " ---\n";
+        for (int row = 0; row < 9; ++row)
+        {
+            for (int col = 0; col < 9; ++col)
+            {
+                std::cout << puzzles[i].solution[row][col] << " ";
+            }
+            std::cout << "\n";
+        }
+	}
+    */
 }
 
 void SudokuGame::startNewGame()
 {
+   
     // If no puzzles are loaded, return
-    if (puzzles.empty())
+    if (puzzles.size() < 2)
         return;
 
     // Generate a random seed based on current elapsed seconds since 1970
@@ -174,8 +200,6 @@ void SudokuGame::startNewGame()
 
     leftBoard->loadPuzzle(puzzles[leftIndex]);
     rightBoard->loadPuzzle(puzzles[rightIndex]);
-
-    std::cout << "Flag3" << std::endl;
 }
 
 void SudokuGame::draw(sf::RenderWindow& window)

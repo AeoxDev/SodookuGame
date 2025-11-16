@@ -77,7 +77,7 @@ void SudokuBoard::loadPuzzle(const PuzzleData& data)
 		{
 			grid[row][col] = data.puzzle[row][col];
 			solution[row][col] = data.solution[row][col];
-			solved[row][col] = (grid[row][col] != 0 && grid[row][col] == (int)solution[row][col]);
+			solved[row][col] = (grid[row][col] != 0 && grid[row][col] == solution[row][col]);
 
 			cellTexts[row][col]->setString(grid[row][col] == 0 ? "" : std::to_string(grid[row][col]));
 
@@ -94,44 +94,74 @@ void SudokuBoard::loadPuzzle(const PuzzleData& data)
 				});
 		}
 	}
+
+	// --- Initialize static solved trackers ---
+	for (int i = 0; i < 9; ++i)
+	{
+		rowWasSolved[i] = true;
+		colWasSolved[i] = true;
+		blockWasSolved[i] = true;
+		// Check if row/col/block really is solved
+		for (int j = 0; j < 9; ++j)
+		{
+			if (!solved[i][j]) rowWasSolved[i] = false;
+			if (!solved[j][i]) colWasSolved[i] = false;
+		}
+	}
+
+	// Check 3x3 blocks
+	for (int block = 0; block < 9; ++block)
+	{
+		int startRow = (block / 3) * 3;
+		int startCol = (block % 3) * 3;
+		for (int r = startRow; r < startRow + 3; ++r)
+			for (int c = startCol; c < startCol + 3; ++c)
+				if (!solved[r][c]) blockWasSolved[block] = false;
+	}
+
+	// Check full board
+	boardWasSolved = true;
+	for (int r = 0; r < 9 && boardWasSolved; ++r)
+		for (int c = 0; c < 9 && boardWasSolved; ++c)
+			if (!solved[r][c]) boardWasSolved = false;
 }
 
 void SudokuBoard::setCell(int col, int row, int number)
 {
-	
 	if (col < 0 || col > 8 || row < 0 || row > 8)
 		return;
 
 	grid[row][col] = number;
 	cellTexts[row][col]->setString(number == 0 ? "" : std::to_string(number));
-	solved[row][col] = (number != 0 && number == (int)solution[row][col]);
 
-	// --- recenter text (same as before) ---
+	// --- Update solved flag ---
+	solved[row][col] = (number != 0 && number == solution[row][col]);
+/* DEBUG
+	std::cout << "SetCell [" << row << "][" << col << "] = " << number
+		<< " | solution = " << solution[row][col]
+		<< " | solved = " << solved[row][col] << std::endl;
+*/
+	// --- Recenter text (SFML 3 style) ---
 	sf::FloatRect textBounds = cellTexts[row][col]->getLocalBounds();
 	cellTexts[row][col]->setOrigin({
-	textBounds.position.x + textBounds.size.x / 2.f,
-	textBounds.position.y + textBounds.size.y / 2.f
+		textBounds.position.x + textBounds.size.x / 2.f,
+		textBounds.position.y + textBounds.size.y / 2.f
 		});
 
 	sf::FloatRect cellBounds = cellShapes[row][col].getGlobalBounds();
 	cellTexts[row][col]->setPosition({
-	cellBounds.position.x + cellBounds.size.x / 2.f,
-	cellBounds.position.y + cellBounds.size.y / 2.f
+		cellBounds.position.x + cellBounds.size.x / 2.f,
+		cellBounds.position.y + cellBounds.size.y / 2.f
 		});
-
-	// --- Static trackers ---
-	static bool rowWasSolved[9] = { false };
-	static bool colWasSolved[9] = { false };
-	static bool blockWasSolved[9] = { false };
-	static bool boardWasSolved = false;
 
 	// --- Check row ---
 	bool rowNowSolved = true;
-	for (int c = 0; c < 9; ++c)
+	for (int c = 0; c < 9; ++c) {
 		if (!solved[row][c]) { rowNowSolved = false; break; }
-
+	}
 	if (rowNowSolved && !rowWasSolved[row]) {
 		rowWasSolved[row] = true;
+		std::cout << "ROW COMPLETE: " << row << std::endl;
 		completionSound->play();
 	}
 	else if (!rowNowSolved) {
@@ -140,11 +170,12 @@ void SudokuBoard::setCell(int col, int row, int number)
 
 	// --- Check column ---
 	bool colNowSolved = true;
-	for (int r = 0; r < 9; ++r)
+	for (int r = 0; r < 9; ++r) {
 		if (!solved[r][col]) { colNowSolved = false; break; }
-
+	}
 	if (colNowSolved && !colWasSolved[col]) {
 		colWasSolved[col] = true;
+		std::cout << "COLUMN COMPLETE: " << col << std::endl;
 		completionSound->play();
 	}
 	else if (!colNowSolved) {
@@ -156,13 +187,13 @@ void SudokuBoard::setCell(int col, int row, int number)
 	int blockCol = col / 3;
 	int blockIndex = blockRow * 3 + blockCol;
 	bool blockNowSolved = true;
-
 	for (int r = blockRow * 3; r < blockRow * 3 + 3; ++r)
 		for (int c = blockCol * 3; c < blockCol * 3 + 3; ++c)
 			if (!solved[r][c]) blockNowSolved = false;
 
 	if (blockNowSolved && !blockWasSolved[blockIndex]) {
 		blockWasSolved[blockIndex] = true;
+		std::cout << "BLOCK COMPLETE: " << blockIndex << std::endl;
 		completionSound->play();
 	}
 	else if (!blockNowSolved) {
@@ -177,7 +208,8 @@ void SudokuBoard::setCell(int col, int row, int number)
 
 	if (boardNowSolved && !boardWasSolved) {
 		boardWasSolved = true;
-		victorySound->play();  // maybe a special full-board sound
+		std::cout << "BOARD COMPLETE!" << std::endl;
+		victorySound->play();
 	}
 	else if (!boardNowSolved) {
 		boardWasSolved = false;
@@ -228,26 +260,6 @@ bool SudokuBoard::isValidMove(int row, int col, int value) const
 	return true; // passed all checks
 }
 
-void SudokuBoard::checkRowComplete()
-{
-	for (int row = 0; row < 9; ++row)
-	{
-		bool complete = true;
-		for (int col = 0; col < 9; ++col)
-		{
-			if (grid[row][col] == 0)
-			{
-				complete = false;
-				break;
-			}
-		}
-		if (complete)
-		{
-			completionSound->play();
-			// Optional: you could also highlight the row or do some visual effect
-		}
-	}
-}
 
 void SudokuBoard::draw(sf::RenderWindow& window)
 {
@@ -400,7 +412,6 @@ void SudokuBoard::handleEvent(const sf::Event& event)
 					if (isValidMove(selectedCell.y, selectedCell.x, num))
 					{
 						setCell(selectedCell.x, selectedCell.y, num);
-						checkRowComplete();
 					}
 				}
 				else if (keyEvent->code == sf::Keyboard::Key::Backspace || keyEvent->code == sf::Keyboard::Key::Delete)

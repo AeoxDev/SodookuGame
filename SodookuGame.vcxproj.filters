@@ -27,12 +27,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="Assets\Puzzles\Puzzles.json" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SudokuBoard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SudokuGame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="External\nlohmann\json.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
