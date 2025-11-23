@@ -20,7 +20,7 @@ struct PuzzleData
 {
 	Grid puzzle{};
 	Grid solution{};
-	DifficultyLevel difficulty;
+	DifficultyLevel difficulty = DifficultyLevel::Easy;
 };
 
 class SudokuGame

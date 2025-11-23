@@ -2,7 +2,9 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <optional>
-#include "SudokuGame.h"
+//#include "GameScene.h"
+//class GameScene;
+struct PuzzleData;
 
 enum class InputMode
 {
