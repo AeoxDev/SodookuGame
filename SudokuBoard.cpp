@@ -14,7 +14,7 @@ SudokuBoard::SudokuBoard(float posX, float posY, float size, sf::Font& font)
 	{
 		std::cerr << "Failed to load victory sound file" << std::endl;
 	}
-	//completionSound = new sf::Sound(completionBuffer);
+
 	completionSound.emplace(completionBuffer);
 	victorySound.emplace(victoryBuffer);
 
@@ -128,20 +128,17 @@ void SudokuBoard::loadPuzzle(const PuzzleData& data)
 
 void SudokuBoard::setCell(int col, int row, int number)
 {
+	// Check out of bounds
 	if (col < 0 || col > 8 || row < 0 || row > 8)
 		return;
 
 	grid[row][col] = number;
 	cellTexts[row][col]->setString(number == 0 ? "" : std::to_string(number));
 
-	// --- Update solved flag ---
+	// Check if cell is solved based on final solution grid
 	solved[row][col] = (number != 0 && number == solution[row][col]);
-/* DEBUG
-	std::cout << "SetCell [" << row << "][" << col << "] = " << number
-		<< " | solution = " << solution[row][col]
-		<< " | solved = " << solved[row][col] << std::endl;
-*/
-	// --- Recenter text (SFML 3 style) ---
+
+	// Center text in the middle of the cell
 	sf::FloatRect textBounds = cellTexts[row][col]->getLocalBounds();
 	cellTexts[row][col]->setOrigin({
 		textBounds.position.x + textBounds.size.x / 2.f,
@@ -154,7 +151,7 @@ void SudokuBoard::setCell(int col, int row, int number)
 		cellBounds.position.y + cellBounds.size.y / 2.f
 		});
 
-	// --- Check row ---
+	// Check row 
 	bool rowNowSolved = true;
 	for (int c = 0; c < 9; ++c) {
 		if (!solved[row][c]) { rowNowSolved = false; break; }
@@ -168,7 +165,7 @@ void SudokuBoard::setCell(int col, int row, int number)
 		rowWasSolved[row] = false;
 	}
 
-	// --- Check column ---
+	// Check column
 	bool colNowSolved = true;
 	for (int r = 0; r < 9; ++r) {
 		if (!solved[r][col]) { colNowSolved = false; break; }
@@ -182,7 +179,7 @@ void SudokuBoard::setCell(int col, int row, int number)
 		colWasSolved[col] = false;
 	}
 
-	// --- Check 3x3 block ---
+	// Check 3x3 block
 	int blockRow = row / 3;
 	int blockCol = col / 3;
 	int blockIndex = blockRow * 3 + blockCol;
@@ -200,7 +197,7 @@ void SudokuBoard::setCell(int col, int row, int number)
 		blockWasSolved[blockIndex] = false;
 	}
 
-	// --- Check full board ---
+	// Check full board
 	bool boardNowSolved = true;
 	for (int r = 0; r < 9 && boardNowSolved; ++r)
 		for (int c = 0; c < 9 && boardNowSolved; ++c)
@@ -218,8 +215,10 @@ void SudokuBoard::setCell(int col, int row, int number)
 
 int SudokuBoard::getCell(int row, int col) const
 {
+	// Check out of bounds
 	if (row < 0 || row > 8 || col < 0 || col > 8)
-		return -1; // invalid coordinates
+		return -1; 
+
 	return grid[row][col];
 }
 
@@ -230,21 +229,21 @@ bool SudokuBoard::isValidMove(int row, int col, int value) const
 	if (value < 1 || value > 9)
 		return false;
 
-	// --- Check row ---
+	// Check row
 	for (int c = 0; c < 9; ++c)
 	{
 		if (grid[row][c] == value && c != col)
 			return false;
 	}
 
-	// --- Check column ---
+	// Check column
 	for (int r = 0; r < 9; ++r)
 	{
 		if (grid[r][col] == value && r != row)
 			return false;
 	}
 
-	// --- Check 3x3 subgrid ---
+	// Check 3x3 subgrid
 	int startRow = (row / 3) * 3;
 	int startCol = (col / 3) * 3;
 
@@ -257,7 +256,7 @@ bool SudokuBoard::isValidMove(int row, int col, int value) const
 		}
 	}
 
-	return true; // passed all checks
+	return true;
 }
 
 
@@ -276,7 +275,7 @@ void SudokuBoard::draw(sf::RenderWindow& window)
 		}
 	}
 
-	// --- Draw thicker subgrid lines (after drawing cells) ---
+	// Draw thicker subgrid lines (after drawing cells)
 	float cellSize = cellShapes[0][0].getSize().x + 2.f;  // add outline offset if needed
 	sf::Vector2f boardPos = cellShapes[0][0].getPosition();
 
@@ -299,7 +298,7 @@ void SudokuBoard::draw(sf::RenderWindow& window)
 		window.draw(line);
 	}
 
-	// --- Draw border around the whole board (optional, thick) ---
+	// Draw border around the whole board (optional, thick)
 	sf::RectangleShape border;
 	border.setPosition(boardPos);
 	border.setSize({ 9 * cellSize, 9 * cellSize });
@@ -320,7 +319,11 @@ void SudokuBoard::draw(sf::RenderWindow& window)
 
 void SudokuBoard::handleEvent(const sf::Event& event)
 {
-	
+	if (inputMode != InputMode::Player)
+	{
+		return;
+	}
+
 	// Check for mouse button press
 	if (event.is<sf::Event::MouseButtonPressed>())
 	{

@@ -141,6 +141,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\nlohmann\json.hpp" />
+    <ClInclude Include="MenuScene.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneManager.h" />
     <ClInclude Include="SudokuBoard.h" />
     <ClInclude Include="SudokuGame.h" />
   </ItemGroup>

@@ -15,11 +15,11 @@ SudokuGame::SudokuGame()
 	}
 	leftBoard = std::make_unique<SudokuBoard>(95.f, 260.f, 400.f, font);
 	rightBoard = std::make_unique<SudokuBoard>(1100.f, 265.f, 400.f, font);
-	//leftBoard.emplace(95.f, 260.f, 400.f, font);
-    //rightBoard.emplace(1100.f, 265.f, 400.f, font);
+
+    leftBoard->SetInputMode(InputMode::Player);
 
 	loadPuzzles();
-	startNewGame();
+	startNewGame(DifficultyLevel::Easy);
 }
 
 SudokuGame::~SudokuGame()
@@ -135,9 +135,29 @@ void SudokuGame::loadPuzzles()
         return;
     }
 
+
+
     for (const auto& item : j)
     {
         PuzzleData data;
+
+        std::string difficulty = item.value("difficulty", "easy");
+        if (difficulty == "easy")
+        {
+            data.difficulty = DifficultyLevel::Easy;
+        }
+        else if (difficulty == "medium")
+        {
+            data.difficulty = DifficultyLevel::Medium;
+        }
+        else if (difficulty == "hard")
+        {
+            data.difficulty = DifficultyLevel::Hard;
+        }
+        else
+        {
+            data.difficulty = DifficultyLevel::Easy; // Default to Easy if unknown
+        }
 
         for (int row = 0; row < 9; ++row)
         {
@@ -155,47 +175,44 @@ void SudokuGame::loadPuzzles()
             }
         }
 
+
         puzzles.push_back(data);
     }
 
     std::cout << "Loaded " << puzzles.size() << " puzzles." << std::endl;
-/*  DEBUG Solution printing
-    for (int i = 0; i < puzzles.size(); ++i)
-    {
-        std::cout << "--- Puzzle " << i + 1 << " ---\n";
-        for (int row = 0; row < 9; ++row)
-        {
-            for (int col = 0; col < 9; ++col)
-            {
-                std::cout << puzzles[i].solution[row][col] << " ";
-            }
-            std::cout << "\n";
-        }
-	}
-    */
 }
 
-void SudokuGame::startNewGame()
+void SudokuGame::startNewGame(DifficultyLevel selectedDifficulty)
 {
-   
-    // If no puzzles are loaded, return
-    if (puzzles.size() < 2)
+    std::vector<size_t> selectedPuzzles;
+    for (int i = 0; i < puzzles.size(); ++i)
+    {
+        if (puzzles[i].difficulty == selectedDifficulty)
+        {
+            selectedPuzzles.push_back(i);
+        }
+    }
+
+    if (selectedPuzzles.size() < 2)
+    {
+        std::cerr << "No Puzzles found for the selected difficulty." << std::endl;
         return;
+    }
 
     // Generate a random seed based on current elapsed seconds since 1970
     static std::mt19937 rng(static_cast<unsigned int>(std::time(nullptr)));
 
     // Set the uniformly distributed random indices
-    std::uniform_int_distribution<std::size_t> dist(0, puzzles.size() - 1);
+    std::uniform_int_distribution<std::size_t> dist(0, selectedPuzzles.size() - 1);
 
     // Generate random indices for both boards
-    std::size_t leftIndex = dist(rng);
-    std::size_t rightIndex = dist(rng);
+    std::size_t leftIndex = selectedPuzzles[dist(rng)];
+    std::size_t rightIndex = selectedPuzzles[dist(rng)];
 
     // Reroll until rightindex is different from left
     while (rightIndex == leftIndex)
     {
-        rightIndex = dist(rng);
+        rightIndex = selectedPuzzles[dist(rng)];
     }
 
     leftBoard->loadPuzzle(puzzles[leftIndex]);

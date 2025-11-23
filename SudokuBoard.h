@@ -4,6 +4,13 @@
 #include <optional>
 #include "SudokuGame.h"
 
+enum class InputMode
+{
+	None,
+	Player,
+	Computer
+};
+
 class SudokuBoard
 {
 private:
@@ -11,7 +18,9 @@ private:
 	bool solved[9][9]{};
 	int solution[9][9]{};
 
-	// --- Solved trackers ---
+	InputMode inputMode = InputMode::None;
+
+	// Solved trackers
 	bool rowWasSolved[9]{false};
 	bool colWasSolved[9]{false};
 	bool blockWasSolved[9]{false};
@@ -32,11 +41,18 @@ public:
 	SudokuBoard(float posX, float posY, float size, sf::Font& font);
 	~SudokuBoard();
 
-	void draw(sf::RenderWindow& window);
-	void handleEvent(const sf::Event& event);
+	void loadPuzzle(const PuzzleData& data);
+	
+	void SetInputMode(InputMode mode) { inputMode = mode; }
+	InputMode GetInputMode() const { return inputMode; }
+
 	void setCell(int row, int col, int value);
 	int getCell(int row, int col) const;
+
+	void draw(sf::RenderWindow& window);
+	void handleEvent(const sf::Event& event);
 	bool isValidMove(int row, int col, int value) const;
-	void checkRowComplete();
-	void loadPuzzle(const PuzzleData& data);
+
+	
+	
 };
